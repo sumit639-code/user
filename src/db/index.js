@@ -10,7 +10,7 @@ const connectDb = async () => {
   } catch (error) {
     console.log("its not connecting");
     console.log(error);
-    process.exit(1)
+    process.exit(111)
   }
 };
 export default connectDb;
