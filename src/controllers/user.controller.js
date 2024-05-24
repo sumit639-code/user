@@ -6,9 +6,11 @@ import { apiresponse } from "../utils/apiresponse.js";
 const registerUser = asyncHandler(async (req, res) => {
   //register user steps
   //get user details from frontend/postman
-  const { username, email, password } = req.body;
+  const { username, email, password,fullName } = req.body;
   console.log("username:", username);
   console.log("email", email);
+  console.log("Password", email);
+  console.log("Password", fullName);
   //validation if any required fields are empty or any proper format
   if (
     [username, email, password].some((fn) => {
@@ -18,7 +20,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new apierror(400, "all fields are required");
   }
   //check if user already exists:username
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   }); //in this a $ is a javascript method used to check the username and email.
   if (existedUser) {
@@ -40,10 +42,11 @@ const registerUser = asyncHandler(async (req, res) => {
   //create user object -create entry in db for uploadign to mongo db
   const user = await User.create({
     username: username.toLowerCase(),
-    avtar: avatar.url,
+    avatar: avatar.url,
     coverimg: coverimg?.url || "",
     email,
     password,
+    fullName
   });
 
   //remove password and refresh token field from response.
