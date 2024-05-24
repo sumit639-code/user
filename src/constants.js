@@ -1,2 +1,1 @@
-const db_name = "Videostream";
-export default db_name
+export const DB_NAME = "videotube"
