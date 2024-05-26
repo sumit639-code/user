@@ -28,15 +28,16 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
-    refreshToken: {
-      type: String,
-    },
+    
     watchHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Video",
       },
     ],
+    refreshToken: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
@@ -73,6 +74,7 @@ userSchema.methods.generateRefreshToken = function () {
   jwt.sign(
     {
       _id: this._id,
+      username: this.username,  
     },
     process.env.REFRESH_TOKEN_SECRET,
     {

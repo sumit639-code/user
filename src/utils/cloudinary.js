@@ -14,9 +14,10 @@ const uploadOnCloud = async (localfilepath) => {
       resource_type: "auto",
     });
     console.log("file has been uploaded", response.url);
+    fs.unlinkSync(localfilepath);
     return response;
   } catch (error) {
-    fs.unlinkSunc(localfilepath); //remove the file from locaaly saved in server.
+    fs.unlinkSync(localfilepath); //remove the file from locaaly saved in server.
     return null;
   }
 };
