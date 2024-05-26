@@ -6,7 +6,7 @@ import { apiresponse } from "../utils/apiresponse.js";
 const registerUser = asyncHandler(async (req, res) => {
   //register user steps
   //get user details from frontend/postman
-  const { username, email, password,fullName } = req.body;
+  const { username, email, password, fullName } = req.body;
   console.log("username:", username);
   console.log("email", email);
   console.log("Password", email);
@@ -28,7 +28,15 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   //check if coverimage and avater
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverimgPath = req.files?.coverimage[0]?.path;
+  // const coverimgPath = req.files?.coverimage[0]?.path;
+  let coverimgPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverimage) &&
+    req.files.coverimage.length > 0
+  ) {
+    coverimgPath = req.files.coverImage[0].path;
+  }
   if (!avatarLocalPath) {
     throw new apierror(409, "avatar file is required");
   }
@@ -46,7 +54,7 @@ const registerUser = asyncHandler(async (req, res) => {
     coverimg: coverimg?.url || "",
     email,
     password,
-    fullName
+    fullName,
   });
 
   //remove password and refresh token field from response.
