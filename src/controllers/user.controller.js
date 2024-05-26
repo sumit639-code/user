@@ -148,5 +148,20 @@ const loginUser = asyncHandler(async (req, res) => {
   //response
 });
 
-const logoutUser = asyncHandler(async (req, res) => {});
-export { registerUser };
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    requser._id,{
+      $set:{
+        refreshToken:undefined
+      },
+      
+    }
+  );
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+  return res.status(200).clearCokkie("accessToken",options).clearCokkie("refreshToken",options).json(new apiresponse(200,{},"user LOgged out"))
+
+});
+export { registerUser, loginUser, logoutUser };
