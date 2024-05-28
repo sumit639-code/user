@@ -28,7 +28,7 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
-    
+
     watchHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -58,7 +58,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 //these are thhe custom methods for the checking of any type of validation.
 
 userSchema.methods.generateAccessToken = function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
       email: this.email,
@@ -69,12 +69,12 @@ userSchema.methods.generateAccessToken = function () {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
     }
   );
+  // console.log(this.id,this.email,this.username)
 };
 userSchema.methods.generateRefreshToken = function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
-      username: this.username,  
     },
     process.env.REFRESH_TOKEN_SECRET,
     {

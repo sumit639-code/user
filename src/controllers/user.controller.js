@@ -8,6 +8,7 @@ const generateAccessandRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
+    console.log(accessToken);
     const refreshToken = user.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
@@ -27,11 +28,10 @@ const registerUser = asyncHandler(async (req, res) => {
   //get user details from frontend/postman
 
   const { username, email, password, fullName } = req.body;
-  console.log("username:", username);
-  console.log("email", email);
-  console.log("Password", email);
-  console.log("fullname", fullName);
-
+  // console.log("username:", username);
+  // console.log("email", email);
+  // console.log("Password", email);
+  // console.log("fullname", fullName);
   //validation if any required fields are empty or any proper format
   if (
     [username, email, password].some((fn) => {
@@ -43,7 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //check if user already exists:username
   const existedUser = await User.findOne({
     $or: [{ username }, { email }],
-  }); //in this a $ is a javascript method used to check the username and email.
+  }); //in this a $ is a mongodb method used to check the username and email. if either field is present or not.
   if (existedUser) {
     throw new apierror(409, "username and email is existed");
   }
@@ -79,7 +79,7 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     fullName,
   });
-  console.log(user);
+  // console.log(user);
 
   // console.log()
   //remove password and refresh token field from response.
@@ -97,13 +97,13 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new apiresponse(200, createdUser, "user Registered :)"));
   //return response.
 });
-
 const loginUser = asyncHandler(async (req, res) => {
   //login steps
   //login user name , password
   //get daya from req body -> data
   const { username, password, email } = req.body;
-  if (!username || !email) {
+  console.log(req.body.username)
+  if (!(username||email)) {
     throw new apierror(400, "username is requiered");
   }
 
@@ -149,7 +149,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  await User.findByIdAndUpdate(requser._id, {
+  await User.findByIdAndUpdate(req.user._id, {
     $set: {
       refreshToken: undefined,
     },
@@ -160,8 +160,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   };
   return res
     .status(200)
-    .clearCokkie("accessToken", options)
-    .clearCokkie("refreshToken", options)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .json(new apiresponse(200, {}, "user LOgged out"));
 });
 export { registerUser, loginUser, logoutUser };
