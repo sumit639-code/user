@@ -17,7 +17,6 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     //this decoded id wil give all the feild that have been given while encoding the access token.
 
     const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
-    console.log(user);
     if (!user) {
       throw new apierror(404, "invalid access token");
     }

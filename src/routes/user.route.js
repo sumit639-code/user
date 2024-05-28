@@ -6,7 +6,6 @@ import {
 } from "../controllers/user.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-// import bodyparser from 'body-parser'
 const router = Router();
 router.route("/register").post(
   upload.fields([
