@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloud } from "../utils/cloudinary.js";
 import { apiresponse } from "../utils/apiresponse.js";
 import jwt from "jsonwebtoken";
+import { application, json } from "express";
 const generateAccessandRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -203,4 +204,159 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new apierror(403, error?.message || "invalid refresh token");
   }
 });
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const user = await User.findById(req.user?._id);
+  const passwordCheck = await user.isPasswordCorrect(oldPassword);
+  if (!passwordCheck) {
+    throw new apierror(400, "invalid old password");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new apiresponse(200, {}, "password changed successfully"));
+});
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(200, req.user, "current user fetched successfully");
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullName, email } = req.body;
+  if (!(fullName || email)) {
+    throw new apierror(400, "all feilds are required");
+  }
+  const user = await User.findByIdAndUpdate(req.user?._id, {
+    $set: {
+      fullName: fullName,
+      email: email,
+    },
+  }).select("-password ");
+  return res.status(200).json(apiresponse(200, user, "user details updated"));
+});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath) {
+    throw new apierror(402, "avatar file is missing");
+  }
+
+  //ADD: delete old image.
+  const avatar = await uploadOnCloud(avatarLocalPath);
+  if (!avatar.url) {
+    throw new apierror(402, "error while uploading on avatar");
+  }
+  const user = User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    { new: true }
+  ).select("-password");
+  return res.status(200).json(200, user, "avatar has been updated");
+});
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverimgLocalPath = req.file?.path;
+  if (!avatarLocalPath) {
+    throw new apierror(402, "coverimage file is missing");
+  }
+  const coverimg = await uploadOnCloud(avatarLocalPath);
+  if (!coverimg.url) {
+    throw new apierror(402, "error while uploading the coverimage");
+  }
+  const user = User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverimg.url,
+      },
+    },
+    { new: true }
+  ).select("-password");
+  return res.status(200).json(200, user, "coverimage has been updated");
+});
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params; //gets user from url
+  if (!username?.trim()) {
+    throw new apierror(402, "username not found");
+  }
+  const channel = await User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    }, //first we matched the user
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    }, //counted the subscriber of the user through channel
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    }, // counted the user has subribed to
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        channelsSubscribedToCount: {
+          $size: "$subscriberdTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    }, //added aditional fields for subscriber count adn is subsribed for the frontend part id that will be shown as subscribe or subscribed.
+    {
+      $project: {
+        fullName: 1,
+        userName: 1,
+        subscribersCount: 1,
+        channelsSubscribedToCount: 1,
+        isSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+      }, // to project slected things .
+    },
+  ]);
+  //this is aggregation pipeline used for the stages of operation in teh docunent so that one can openly mege or change any fields and have more fields in it by stages of operatioon through document scanin, read by docs of mongodb of aggregation pipeline.
+  if (!channel?.length) {
+    throw new apierror(402, "channel doesnt exist");
+  }
+  return res
+    .status(200)
+    .json(
+      new apiresponse(200, channel[0], "user channel fetched successfully")
+    );
+});
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  getUserChannelProfile,
+};
