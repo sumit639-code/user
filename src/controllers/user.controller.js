@@ -33,6 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // console.log("email", email);
   // console.log("Password", password);
   // console.log("fullname", fullName);
+  console.log("fullname", req.files);
   //validation if any required fields are empty or any proper format
   if (
     [username, email, password].some((fn) => {
@@ -48,18 +49,20 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new apierror(409, "username and email is existed");
   }
+  // console.log(existedUser)
 
   //check if coverimage and avater
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  // console.log(avatarLocalPath);
   // const coverimgPath = req.files?.coverimage[0]?.path;
   let coverimgPath;
+  console.log(req.files);
+  console.log(coverimgPath);
   if (
     req.files &&
-    Array.isArray(req.files.coverimage) &&
-    req.files.coverimage.length > 0
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length >= 0
   ) {
-    coverimgPath = req.files?.coverImage[0].path;
+    coverimgPath = req.files.coverImage[0].path;
   }
   // console.log(coverimgPath);
   if (!avatarLocalPath) {
@@ -77,7 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     username: username.toLowerCase(),
     avatar: avatar.url,
-    coverimg: coverimg?.url || "",
+    coverImage: coverimg?.url || "",
     email,
     password,
     fullName,
