@@ -31,7 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password, fullName } = req.body;
   // console.log("username:", username);
   // console.log("email", email);
-  // console.log("Password", email);
+  // console.log("Password", password);
   // console.log("fullname", fullName);
   //validation if any required fields are empty or any proper format
   if (
@@ -51,6 +51,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //check if coverimage and avater
   const avatarLocalPath = req.files?.avatar[0]?.path;
+  // console.log(avatarLocalPath);
   // const coverimgPath = req.files?.coverimage[0]?.path;
   let coverimgPath;
   if (
@@ -58,8 +59,9 @@ const registerUser = asyncHandler(async (req, res) => {
     Array.isArray(req.files.coverimage) &&
     req.files.coverimage.length > 0
   ) {
-    coverimgPath = req.files.coverImage[0].path;
+    coverimgPath = req.files?.coverImage[0].path;
   }
+  // console.log(coverimgPath);
   if (!avatarLocalPath) {
     throw new apierror(409, "avatar file is required");
   }
@@ -349,6 +351,13 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       new apiresponse(200, channel[0], "user channel fetched successfully")
     );
 });
+const deleteCoverImage = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user?._id);
+  if (!user) {
+    throw new apierror(403, "the user is not found.");
+  }
+  console.log(user.avatar?.url);
+});
 export {
   registerUser,
   loginUser,
@@ -359,4 +368,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   getUserChannelProfile,
+  deleteCoverImage,
 };
