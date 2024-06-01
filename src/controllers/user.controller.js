@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apierror } from "../utils/apierror.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloud } from "../utils/cloudinary.js";
+import { deleteOldFile, uploadOnCloud } from "../utils/cloudinary.js";
 import { apiresponse } from "../utils/apiresponse.js";
 import jwt from "jsonwebtoken";
 import { application, json } from "express";
@@ -359,7 +359,23 @@ const deleteCoverImage = asyncHandler(async (req, res) => {
   if (!user) {
     throw new apierror(403, "the user is not found.");
   }
-  console.log(user.avatar?.url);
+  const coverimageurl = user.coverImage;
+  if (!coverimageurl) {
+    throw new apierror(402, "coverImage is not present");
+  }
+  const split = coverimageurl.split("/");
+  const split2 = split[split.length - 1].split(".");
+  const publicid = split2[0];
+  console.log(publicid);
+  const result = await deleteOldFile(publicid);
+  await User.findByIdAndUpdate(req.user._id, {
+    coverImage: "",
+  });
+  return res
+    .status(200)
+    .json(
+      new apiresponse(200, result, "Coverimage has been deleted successfully")
+    );
 });
 export {
   registerUser,

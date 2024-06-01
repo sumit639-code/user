@@ -25,16 +25,14 @@ const uploadOnCloud = async (localfilepath) => {
 const deleteOldFile = async (url) => {
   try {
     if (!url) {
-      return null;
+      return console.log("url is not present");
     }
-    const response = await cloudinary.api.destroy(url, {
-      resource_type: "auto",
-    });
+    const response = await cloudinary.uploader.destroy(url);
 
     console.log("the file has been deleted");
-    return null;
+    return console.log("work has been done");
   } catch (error) {
-    return null;
+    return console.log("there is some error in file scanning", error);
   }
 };
 export { uploadOnCloud, deleteOldFile };
